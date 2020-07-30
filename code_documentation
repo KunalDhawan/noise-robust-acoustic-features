@@ -1,0 +1,32 @@
+Code for the project: An i-vector based Non-Negative Matrix Factorization approach towards noise robust Automatic Speech Recognition
+
+Steps:
+1)Feature Extraction
+	a)change directory to KDFeatureExtraction
+	b)Run main function: KD_main_final
+		Here we can set the value of the hyperparameters: num_of_basis_elements,context_len,Wsparsity,Hsparsity,batch_size
+		Please change the location of the aurora 4 database and the train_multi file list as per the location on your system ( see part i below for variables to update)
+		You would also need to appropiately update the following parameters:
+			i) in KDFeatureExtraction/KD_main_final : datadir(line 18), filelist(line 19)
+			ii) in KDFeatureExtraction/kd_extract_features_test : kdID(line 4)
+
+		Finally, features will be saved in the folder ['kd_features_',num2str(num_of_basis_elements),'_',num2str(context_len),'_',num2str(Wsparsity),'_',num2str(Hsparsity)] inside the same directory
+
+2)Create feat_orig.scp to feed to Kaldi
+	a)come back to the main directory: Final_code
+	b)run the script 'prepare_adapted_feats_kd' in the following way:
+		$ ./prepare_adapted_feats_kd 'train_multi' '<num_of_basis_elems>' '<H_sparsity>'
+		$ ./prepare_adapted_feats_kd 'test_0330' '<num_of_basis_elems>' '<H_sparsity>'
+	c)this will create the required files in the folder feature_<num_of_basis_elems>_1_0_<H_sparsity> in the present directory
+	d)please change the following variable names in the script prepare_adapted_feats_kd as per locations on your system:
+		i) featdir (line 7)
+		ii) outdir (line 11)
+
+3)Building the ASR system
+	a)change directory to kaldiMainFolder
+	a.5) correctly set the path of Kaldi and IRSTLM(not actually required in general because i have already calculated the LM for the aurora4 database and you can use the same) in the script kaldiMainFolder/path.sh
+	b)run the script 'mov_feat_orig_dot_scp_to_correct_location' to move the feat_orig.scp created earlier to the correct location
+	  you may need to change the values of the following parameter -> 'feature_60_1_0_2' to the apt folder where feats_orig.scp was created in step 2
+	c)run the script 'make_features' to make the features and store them in Kaldi format
+	d)run the script 'automate_cmvn_cal' to apply CMVN to the above features
+	e)run the script 'all_steps_from_monophone_training' to train the monophone->triphone->DNN acoustic system (PS: language model for the aurora 4 database has already been computed and saved under the folder kaldiMainFolder/data/lang_trigram_aurora4)
